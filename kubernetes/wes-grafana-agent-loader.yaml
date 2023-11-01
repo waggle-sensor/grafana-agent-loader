@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wes-grafana-agent-loader
+spec:
+  selector:
+    app: wes-grafana-agent-loader
+  ports:
+    - name: stream
+      protocol: TCP
+      port: 9201
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wes-grafana-agent-loader
+spec:
+  selector:
+    matchLabels:
+      app: wes-grafana-agent-loader
+  template:
+    metadata:
+      labels:
+        app: wes-grafana-agent-loader
+    spec:
+      priorityClassName: wes-high-priority
+      nodeSelector:
+        node-role.kubernetes.io/master: "true"
+      containers:
+        - image: 10.31.81.1:5000/local/grafana-agent-loader
+          imagePullPolicy: Always
+          name: wes-grafana-agent-loader
+          args:
+          - --influxdb-url=http://wes-node-influxdb:8086
+          - --influxdb.token=r8prFsq4IfAA61zsS8uuDTa3pPCvgz9geIJVEVmN4PdKoeI3-29dcSJr9KiuvDkx0OGGdn8JG4lvspLIIoy7bA==
+          - --influxdb.bucket=waggle
+          - --influxdb.organization=waggle
+          ports:
+            - name: http
+              containerPort: 9201
